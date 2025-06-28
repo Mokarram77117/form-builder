@@ -3,40 +3,67 @@ import type { FormData, FormField } from "../../types"
 
 interface FormBuilderState {
   currentForm: FormData | null
-  selectedField: FormField | null
-  isDirty: boolean
-  saving: boolean
   loading: boolean
   error: string | null
-  previewMode: "desktop" | "mobile"
-  activeTab: "build" | "preview" | "settings"
+  selectedFieldId: string | null
+  isDirty: boolean
 }
 
 const initialState: FormBuilderState = {
   currentForm: null,
-  selectedField: null,
-  isDirty: false,
-  saving: false,
   loading: false,
   error: null,
-  previewMode: "desktop",
-  activeTab: "build",
+  selectedFieldId: null,
+  isDirty: false,
 }
 
-// Async thunks
-export const loadForm = createAsyncThunk("formBuilder/loadForm", async (id: string) => {
-  // Simulate API call
+export const loadForm = createAsyncThunk("formBuilder/loadForm", async (formId: string, { getState }) => {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  if (id === "new") {
+  // Get form from the forms slice
+  const state = getState() as any
+  const form = state.forms.forms.find((f: FormData) => f.id === formId)
+
+  if (!form) {
+    throw new Error("Form not found")
+  }
+
+  return form
+})
+
+export const saveForm = createAsyncThunk("formBuilder/saveForm", async (_, { getState, dispatch }) => {
+  const state = getState() as any
+  const currentForm = state.formBuilder.currentForm
+
+  if (!currentForm) {
+    throw new Error("No form to save")
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 500))
+
+  // Update the form in the forms slice
+  dispatch({
+    type: "forms/updateForm/fulfilled",
+    payload: {
+      id: currentForm.id,
+      updates: currentForm,
+    },
+  })
+
+  return currentForm
+})
+
+export const createNewForm = createAsyncThunk(
+  "formBuilder/createNewForm",
+  async (formData: { name: string; description: string }, { dispatch }) => {
     const newForm: FormData = {
       id: `form_${Date.now()}`,
-      name: "Untitled Form",
-      description: "Form description",
+      name: formData.name,
+      description: formData.description,
       fields: [],
       settings: {
         theme: {
-          primaryColor: "#3B82F6",
+          primaryColor: "#8B5CF6",
           backgroundColor: "#FFFFFF",
           fontFamily: "Inter",
         },
@@ -49,82 +76,24 @@ export const loadForm = createAsyncThunk("formBuilder/loadForm", async (id: stri
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
+
+    // Add to forms slice
+    dispatch({
+      type: "forms/createForm/fulfilled",
+      payload: newForm,
+    })
+
     return newForm
-  }
-
-  // Mock existing form data with sample fields for preview
-  const mockForm: FormData = {
-    id,
-    name: "Customer Feedback Survey",
-    description: "Help us improve our services by sharing your feedback",
-    fields: [
-      {
-        id: "field_1",
-        type: "text",
-        label: "Full Name",
-        placeholder: "Enter your full name",
-        required: true,
-      },
-      {
-        id: "field_2",
-        type: "email",
-        label: "Email Address",
-        placeholder: "Enter your email",
-        required: true,
-      },
-      {
-        id: "field_3",
-        type: "rating",
-        label: "Overall Satisfaction",
-        required: true,
-      },
-      {
-        id: "field_4",
-        type: "dropdown",
-        label: "How did you hear about us?",
-        required: false,
-        options: ["Google Search", "Social Media", "Friend Referral", "Advertisement", "Other"],
-      },
-    ],
-    settings: {
-      theme: {
-        primaryColor: "#3B82F6",
-        backgroundColor: "#FFFFFF",
-        fontFamily: "Inter",
-      },
-      notifications: {},
-      allowMultipleSubmissions: true,
-      requireAuth: false,
-    },
-    status: "published",
-    submissions: 247,
-    createdAt: "2024-01-15",
-    updatedAt: "2024-01-20",
-  }
-  return mockForm
-})
-
-export const saveForm = createAsyncThunk("formBuilder/saveForm", async (form: FormData) => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  return { ...form, updatedAt: new Date().toISOString() }
-})
+  },
+)
 
 const formBuilderSlice = createSlice({
   name: "formBuilder",
   initialState,
   reducers: {
-    updateFormTitle: (state, action: PayloadAction<string>) => {
-      if (state.currentForm) {
-        state.currentForm.title = action.payload
-        state.isDirty = true
-      }
-    },
-    updateFormDescription: (state, action: PayloadAction<string>) => {
-      if (state.currentForm) {
-        state.currentForm.description = action.payload
-        state.isDirty = true
-      }
+    setCurrentForm: (state, action: PayloadAction<FormData>) => {
+      state.currentForm = action.payload
+      state.isDirty = false
     },
     addField: (state, action: PayloadAction<FormField>) => {
       if (state.currentForm) {
@@ -134,68 +103,59 @@ const formBuilderSlice = createSlice({
     },
     updateField: (state, action: PayloadAction<{ id: string; updates: Partial<FormField> }>) => {
       if (state.currentForm) {
-        const { id, updates } = action.payload
-        const fieldIndex = state.currentForm.fields.findIndex((field) => field.id === id)
+        const fieldIndex = state.currentForm.fields.findIndex((field) => field.id === action.payload.id)
         if (fieldIndex !== -1) {
-          state.currentForm.fields[fieldIndex] = { ...state.currentForm.fields[fieldIndex], ...updates }
-          state.isDirty = true
-
-          // Update selected field if it's the one being updated
-          if (state.selectedField?.id === id) {
-            state.selectedField = { ...state.selectedField, ...updates }
+          state.currentForm.fields[fieldIndex] = {
+            ...state.currentForm.fields[fieldIndex],
+            ...action.payload.updates,
           }
+          state.isDirty = true
         }
       }
     },
-    deleteField: (state, action: PayloadAction<string>) => {
+    removeField: (state, action: PayloadAction<string>) => {
       if (state.currentForm) {
         state.currentForm.fields = state.currentForm.fields.filter((field) => field.id !== action.payload)
         state.isDirty = true
-
-        // Clear selected field if it was deleted
-        if (state.selectedField?.id === action.payload) {
-          state.selectedField = null
-        }
       }
     },
-    reorderFields: (state, action: PayloadAction<{ oldIndex: number; newIndex: number }>) => {
+    reorderFields: (state, action: PayloadAction<FormField[]>) => {
       if (state.currentForm) {
-        const { oldIndex, newIndex } = action.payload
-        const fields = [...state.currentForm.fields]
-        const [removed] = fields.splice(oldIndex, 1)
-        fields.splice(newIndex, 0, removed)
-        state.currentForm.fields = fields
+        state.currentForm.fields = action.payload
         state.isDirty = true
       }
     },
-    setSelectedField: (state, action: PayloadAction<FormField | null>) => {
-      state.selectedField = action.payload
+    setSelectedField: (state, action: PayloadAction<string | null>) => {
+      state.selectedFieldId = action.payload
     },
     updateFormSettings: (state, action: PayloadAction<Partial<FormData["settings"]>>) => {
       if (state.currentForm) {
-        state.currentForm.settings = { ...state.currentForm.settings, ...action.payload }
+        state.currentForm.settings = {
+          ...state.currentForm.settings,
+          ...action.payload,
+        }
         state.isDirty = true
       }
     },
-    setPreviewMode: (state, action: PayloadAction<"desktop" | "mobile">) => {
-      state.previewMode = action.payload
-    },
-    setActiveTab: (state, action: PayloadAction<"build" | "preview" | "settings">) => {
-      state.activeTab = action.payload
+    updateFormInfo: (state, action: PayloadAction<{ name?: string; description?: string }>) => {
+      if (state.currentForm) {
+        if (action.payload.name !== undefined) {
+          state.currentForm.name = action.payload.name
+        }
+        if (action.payload.description !== undefined) {
+          state.currentForm.description = action.payload.description
+        }
+        state.isDirty = true
+      }
     },
     clearForm: (state) => {
       state.currentForm = null
-      state.selectedField = null
-      state.isDirty = false
-      state.error = null
-    },
-    markAsSaved: (state) => {
+      state.selectedFieldId = null
       state.isDirty = false
     },
   },
   extraReducers: (builder) => {
     builder
-      // Load form
       .addCase(loadForm.pending, (state) => {
         state.loading = true
         state.error = null
@@ -204,42 +164,39 @@ const formBuilderSlice = createSlice({
         state.loading = false
         state.currentForm = action.payload
         state.isDirty = false
-        state.selectedField = null
       })
       .addCase(loadForm.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || "Failed to load form"
       })
-      // Save form
       .addCase(saveForm.pending, (state) => {
-        state.saving = true
-        state.error = null
+        state.loading = true
       })
-      .addCase(saveForm.fulfilled, (state, action) => {
-        state.saving = false
-        state.currentForm = action.payload
+      .addCase(saveForm.fulfilled, (state) => {
+        state.loading = false
         state.isDirty = false
       })
       .addCase(saveForm.rejected, (state, action) => {
-        state.saving = false
+        state.loading = false
         state.error = action.error.message || "Failed to save form"
+      })
+      .addCase(createNewForm.fulfilled, (state, action) => {
+        state.currentForm = action.payload
+        state.isDirty = false
       })
   },
 })
 
 export const {
-  updateFormTitle,
-  updateFormDescription,
+  setCurrentForm,
   addField,
   updateField,
-  deleteField,
+  removeField,
   reorderFields,
   setSelectedField,
   updateFormSettings,
-  setPreviewMode,
-  setActiveTab,
+  updateFormInfo,
   clearForm,
-  markAsSaved,
 } = formBuilderSlice.actions
 
 export default formBuilderSlice.reducer

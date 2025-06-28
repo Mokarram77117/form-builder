@@ -1,32 +1,36 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Select, SelectItem } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, CheckCircle, Smartphone, Monitor, Plus } from "lucide-react"
 import Link from "next/link"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { loadForm } from "@/lib/features/formBuilder/formBuilderSlice"
+import { fetchForms } from "@/lib/features/forms/formsSlice"
 
 export default function FormPreview({ params }: { params: { id: string } }) {
   const dispatch = useAppDispatch()
-  const { currentForm, loading } = useAppSelector((state) => state.formBuilder)
+  const { forms, loading } = useAppSelector((state) => state.forms)
   const [formValues, setFormValues] = useState<Record<string, any>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop")
 
+  // Find the current form from the forms slice
+  const currentForm = forms.find((form) => form.id === params.id)
+
   useEffect(() => {
-    if (params.id !== "new") {
-      dispatch(loadForm(params.id))
+    if (forms.length === 0) {
+      dispatch(fetchForms())
     }
-  }, [dispatch, params.id])
+  }, [dispatch, forms.length])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +55,17 @@ export default function FormPreview({ params }: { params: { id: string } }) {
             required={field.required}
             value={formValues[field.id] || ""}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
-            style={{ borderColor: currentForm?.settings.theme.primaryColor }}
+            className="border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+          />
+        )
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={field.placeholder}
+            required={field.required}
+            value={formValues[field.id] || ""}
+            onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
+            className="border-gray-200 focus:border-purple-500 focus:ring-purple-500"
           />
         )
       case "dropdown":
@@ -60,12 +74,33 @@ export default function FormPreview({ params }: { params: { id: string } }) {
             value={formValues[field.id] || ""}
             onValueChange={(value) => setFormValues((prev) => ({ ...prev, [field.id]: value }))}
           >
-            {(field.options || []).map((option: string, index: number) => (
-              <SelectItem key={index} value={option}>
-                {option}
-              </SelectItem>
-            ))}
+            <SelectTrigger className="border-gray-200 focus:border-purple-500 focus:ring-purple-500">
+              <SelectValue placeholder={field.placeholder || "Select an option"} />
+            </SelectTrigger>
+            <SelectContent>
+              {(field.options || []).map((option: string, index: number) => (
+                <SelectItem key={index} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
+        )
+      case "radio":
+        return (
+          <RadioGroup
+            value={formValues[field.id] || ""}
+            onValueChange={(value) => setFormValues((prev) => ({ ...prev, [field.id]: value }))}
+          >
+            {(field.options || []).map((option: string, index: number) => (
+              <div key={index} className="flex items-center space-x-2">
+                <RadioGroupItem value={option} id={`${field.id}-${index}`} />
+                <Label htmlFor={`${field.id}-${index}`} className="text-sm font-normal">
+                  {option}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
         )
       case "checkbox":
         return (
@@ -120,6 +155,7 @@ export default function FormPreview({ params }: { params: { id: string } }) {
             type="file"
             required={field.required}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.files?.[0] }))}
+            className="border-gray-200 focus:border-purple-500 focus:ring-purple-500"
           />
         )
       default:
@@ -129,9 +165,9 @@ export default function FormPreview({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading form preview...</p>
         </div>
       </div>
@@ -140,11 +176,17 @@ export default function FormPreview({ params }: { params: { id: string } }) {
 
   if (!currentForm) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Form not found or no fields added yet</p>
-          <Link href={`/forms/builder/${params.id}`}>
-            <Button>Back to Builder</Button>
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Plus className="w-8 h-8 text-purple-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Form not found</h3>
+          <p className="text-gray-600 mb-4">The form you're looking for doesn't exist or has been deleted.</p>
+          <Link href="/forms">
+            <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+              Back to Forms
+            </Button>
           </Link>
         </div>
       </div>
@@ -156,11 +198,11 @@ export default function FormPreview({ params }: { params: { id: string } }) {
       <div
         className="min-h-screen flex items-center justify-center p-4"
         style={{
-          backgroundColor: currentForm.settings.theme.backgroundColor,
+          background: `linear-gradient(135deg, ${currentForm.settings.theme.backgroundColor}20, ${currentForm.settings.theme.primaryColor}10)`,
           fontFamily: currentForm.settings.theme.fontFamily,
         }}
       >
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md shadow-xl border-0">
           <CardContent className="p-8 text-center">
             <div
               className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -177,13 +219,13 @@ export default function FormPreview({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <Link href={`/forms/builder/${params.id}`}>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hover:bg-purple-50 hover:text-purple-600">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Builder
               </Button>
@@ -215,22 +257,12 @@ export default function FormPreview({ params }: { params: { id: string } }) {
       <div
         className="py-8 px-4"
         style={{
-          backgroundColor: currentForm.settings.theme.backgroundColor,
           fontFamily: currentForm.settings.theme.fontFamily,
         }}
       >
         <div className={`mx-auto ${previewMode === "mobile" ? "max-w-sm" : "max-w-2xl"}`}>
-          <Card>
-            <CardHeader className="text-center">
-              {currentForm.settings.theme.logo && (
-                <div className="mb-4">
-                  <img
-                    src={currentForm.settings.theme.logo || "/placeholder.svg"}
-                    alt="Logo"
-                    className="h-12 mx-auto"
-                  />
-                </div>
-              )}
+          <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+            <CardHeader className="text-center bg-gradient-to-r from-purple-600/5 to-blue-600/5">
               <CardTitle
                 className="text-xl lg:text-2xl font-bold"
                 style={{ color: currentForm.settings.theme.primaryColor }}
@@ -242,13 +274,15 @@ export default function FormPreview({ params }: { params: { id: string } }) {
             <CardContent className="p-4 lg:p-8">
               {currentForm.fields.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Plus className="w-8 h-8 text-gray-400" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Plus className="w-8 h-8 text-purple-600" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No fields added yet</h3>
                   <p className="text-gray-600 mb-4">Add some fields to your form to see the preview</p>
                   <Link href={`/forms/builder/${params.id}`}>
-                    <Button>Add Fields</Button>
+                    <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                      Add Fields
+                    </Button>
                   </Link>
                 </div>
               ) : (
@@ -269,7 +303,10 @@ export default function FormPreview({ params }: { params: { id: string } }) {
                       className="w-full"
                       disabled={isSubmitting}
                       size="lg"
-                      style={{ backgroundColor: currentForm.settings.theme.primaryColor }}
+                      style={{
+                        background: `linear-gradient(135deg, ${currentForm.settings.theme.primaryColor}, ${currentForm.settings.theme.primaryColor}dd)`,
+                        border: "none",
+                      }}
                     >
                       {isSubmitting ? "Submitting..." : "Submit Form"}
                     </Button>

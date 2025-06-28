@@ -15,7 +15,32 @@ const initialState: FormsState = {
       id: "1",
       name: "Customer Feedback Survey",
       description: "Collect customer satisfaction ratings and feedback",
-      fields: [],
+      fields: [
+        {
+          id: "field_1",
+          type: "text",
+          label: "Your Name",
+          placeholder: "Enter your full name",
+          required: true,
+          options: [],
+        },
+        {
+          id: "field_2",
+          type: "email",
+          label: "Email Address",
+          placeholder: "Enter your email",
+          required: true,
+          options: [],
+        },
+        {
+          id: "field_3",
+          type: "rating",
+          label: "Overall Satisfaction",
+          placeholder: "",
+          required: true,
+          options: [],
+        },
+      ],
       settings: {
         theme: {
           primaryColor: "#3B82F6",
@@ -35,7 +60,32 @@ const initialState: FormsState = {
       id: "2",
       name: "Job Application Form",
       description: "Streamlined application process for new hires",
-      fields: [],
+      fields: [
+        {
+          id: "field_1",
+          type: "text",
+          label: "Full Name",
+          placeholder: "Enter your full name",
+          required: true,
+          options: [],
+        },
+        {
+          id: "field_2",
+          type: "email",
+          label: "Email",
+          placeholder: "Enter your email address",
+          required: true,
+          options: [],
+        },
+        {
+          id: "field_3",
+          type: "file",
+          label: "Resume",
+          placeholder: "",
+          required: true,
+          options: [],
+        },
+      ],
       settings: {
         theme: {
           primaryColor: "#10B981",
@@ -116,6 +166,14 @@ export const duplicateForm = createAsyncThunk("forms/duplicateForm", async (id: 
   return id
 })
 
+export const updateFormStatus = createAsyncThunk(
+  "forms/updateFormStatus",
+  async ({ id, status }: { id: string; status: "draft" | "published" | "archived" }) => {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return { id, status }
+  },
+)
+
 const formsSlice = createSlice({
   name: "forms",
   initialState,
@@ -170,6 +228,14 @@ const formsSlice = createSlice({
             updatedAt: new Date().toISOString(),
           }
           state.forms.unshift(duplicatedForm)
+        }
+      })
+      .addCase(updateFormStatus.fulfilled, (state, action) => {
+        const { id, status } = action.payload
+        const formIndex = state.forms.findIndex((form) => form.id === id)
+        if (formIndex !== -1) {
+          state.forms[formIndex].status = status
+          state.forms[formIndex].updatedAt = new Date().toISOString()
         }
       })
   },
