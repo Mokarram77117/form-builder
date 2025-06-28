@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useState } from "react"
 import {
   DndContext,
   type DragEndEvent,
@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Save, Eye, Smartphone, Monitor, ArrowLeft, Menu, X } from "lucide-react"
+import { Save, Eye, Smartphone, Monitor, ArrowLeft, Menu, X, Settings, BookIcon as Publish } from "lucide-react"
 import Link from "next/link"
 import { FormFieldPalette } from "@/components/form-builder/field-palette"
 import { FormCanvas } from "@/components/form-builder/form-canvas"
@@ -44,7 +44,6 @@ import {
   clearForm,
 } from "@/lib/features/formBuilder/formBuilderSlice"
 import type { FormField } from "@/lib/types"
-import { useState } from "react"
 
 export default function FormBuilder({ params }: { params: { id: string } }) {
   const dispatch = useAppDispatch()
@@ -54,6 +53,7 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
   const [draggedField, setDraggedField] = useState<FormField | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isPublishing, setIsPublishing] = useState(false)
 
   useEffect(() => {
     dispatch(loadForm(params.id))
@@ -140,6 +140,7 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
           console.log("Adding new field:", newField)
           dispatch(addField(newField))
+          dispatch(setSelectedField(newField))
           return
         }
       }
@@ -168,13 +169,31 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
   const handleDeleteField = useCallback(
     (fieldId: string) => {
       dispatch(deleteField(fieldId))
+      if (selectedField?.id === fieldId) {
+        dispatch(setSelectedField(null))
+      }
     },
-    [dispatch],
+    [dispatch, selectedField],
   )
 
   const handleSaveForm = useCallback(async () => {
     if (currentForm) {
       dispatch(saveForm(currentForm))
+    }
+  }, [currentForm, dispatch])
+
+  const handlePublishForm = useCallback(async () => {
+    if (currentForm) {
+      setIsPublishing(true)
+      try {
+        await dispatch(saveForm(currentForm))
+        // In a real app, you'd also update the form status to 'published'
+        console.log("Form published successfully!")
+      } catch (error) {
+        console.error("Failed to publish form:", error)
+      } finally {
+        setIsPublishing(false)
+      }
     }
   }, [currentForm, dispatch])
 
@@ -208,36 +227,8 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <header className="bg-white border-b border-gray-200 lg:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-3">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="p-2">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-sm font-semibold truncate max-w-32">{currentForm.title}</h1>
-              <p className="text-xs text-gray-500 truncate max-w-32">{currentForm.description}</p>
-              {isDirty && <span className="text-xs text-orange-500">• Unsaved changes</span>}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Button onClick={handleSaveForm} size="sm" disabled={saving || !isDirty}>
-              <Save className="w-4 h-4" />
-              {saving ? "Saving..." : "Save"}
-            </Button>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-gray-100 lg:hidden">
-              {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Desktop Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40 hidden lg:block">
+      {/* Header with Form Name Input */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -248,16 +239,18 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 </Button>
               </Link>
 
-              <div className="flex flex-col">
+              <div className="flex flex-col space-y-1">
                 <Input
-                  value={currentForm.title}
+                  value={currentForm.title || currentForm.name}
                   onChange={(e) => dispatch(updateFormTitle(e.target.value))}
                   className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+                  placeholder="Form Title"
                 />
                 <Input
                   value={currentForm.description}
                   onChange={(e) => dispatch(updateFormDescription(e.target.value))}
                   className="text-sm text-gray-600 border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+                  placeholder="Form Description"
                 />
                 {isDirty && <span className="text-xs text-orange-500">• Unsaved changes</span>}
               </div>
@@ -283,21 +276,40 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 </Button>
               </div>
 
-              <Button variant="outline" size="sm">
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
+              <Link href={`/forms/${params.id}/preview`}>
+                <Button variant="outline" size="sm">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+              </Link>
 
-              <Button onClick={handleSaveForm} size="sm" disabled={saving || !isDirty}>
+              <Button onClick={handleSaveForm} size="sm" disabled={saving || !isDirty} variant="outline">
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? "Saving..." : "Save"}
               </Button>
+
+              <Button
+                onClick={handlePublishForm}
+                size="sm"
+                disabled={isPublishing || !currentForm.fields.length}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Publish className="w-4 h-4 mr-2" />
+                {isPublishing ? "Publishing..." : "Publish"}
+              </Button>
+
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
+              >
+                {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Tabs value={activeTab} onValueChange={(value) => dispatch(setActiveTab(value as any))} className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-md mb-6">
             <TabsTrigger value="build">Build</TabsTrigger>
@@ -329,7 +341,7 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                             <X className="w-5 h-5" />
                           </button>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Long press and drag to add fields</p>
+                        <p className="text-sm text-gray-600 mt-1">Drag fields to add them to your form</p>
                       </div>
                       <div className="flex-1 overflow-y-auto p-4">
                         <FormFieldPalette />
@@ -338,8 +350,8 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                   </div>
                 )}
 
-                {/* Mobile Form Canvas with SortableContext */}
-                <div className="space-y-4 h-[calc(100vh-140px)] overflow-y-auto">
+                {/* Mobile Form Canvas */}
+                <div className="space-y-4 h-[calc(100vh-200px)] overflow-y-auto">
                   <SortableContext items={currentForm.fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
                     <FormCanvas
                       fields={currentForm.fields}
@@ -353,7 +365,10 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                   {selectedField && (
                     <Card className="mx-4">
                       <CardHeader>
-                        <CardTitle className="text-lg">Field Properties</CardTitle>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Settings className="w-5 h-5" />
+                          Field Properties
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <FieldPropertiesPanel
@@ -370,14 +385,14 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 </div>
               </div>
 
-              {/* Desktop Layout */}
-              <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 lg:h-[calc(100vh-200px)]">
-                {/* Field Palette */}
+              {/* Desktop 3-Column Layout */}
+              <div className="hidden lg:grid lg:grid-cols-12 lg:gap-6 lg:h-[calc(100vh-220px)]">
+                {/* Left Panel: Draggable Fields */}
                 <div className="col-span-3 overflow-y-auto">
                   <FormFieldPalette />
                 </div>
 
-                {/* Form Canvas */}
+                {/* Center Panel: Form Canvas */}
                 <div className="col-span-6 overflow-y-auto">
                   <SortableContext items={currentForm.fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
                     <FormCanvas
@@ -390,7 +405,7 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                   </SortableContext>
                 </div>
 
-                {/* Properties Panel */}
+                {/* Right Panel: Field Settings Editor */}
                 <div className="col-span-3 overflow-y-auto">
                   <FieldPropertiesPanel
                     field={selectedField}
