@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit"
 import formsReducer from "./features/forms/formsSlice"
-import formBuilderReducer from "./features/formBuilder/formBuilderSlice"
+// Explicit extension avoids ambiguity when both .ts and .tsx once existed.
+import formBuilderReducer from "./features/formBuilder/formBuilderSlice.ts"
 import submissionsReducer from "./features/submissions/submissionsSlice"
 import workflowsReducer from "./features/workflows/workflowsSlice"
 import themeReducer from "./features/theme/themeSlice"
