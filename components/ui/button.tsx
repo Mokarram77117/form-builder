@@ -19,18 +19,16 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none relative overflow-hidden"
+    "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50 disabled:pointer-events-none relative overflow-hidden"
 
   const variants = {
-    default:
-      "bg-white text-gray-900 border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus:ring-gray-500 shadow-sm",
-    outline:
-      "border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 focus:ring-purple-500",
-    ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
-    destructive: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg",
-    success: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-lg",
-    warning: "bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500 shadow-lg",
-    gradient: "gradient-primary text-white hover:shadow-lg hover:scale-105 focus:ring-purple-500 shadow-lg",
+    default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+    outline: "border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground",
+    ghost: "text-foreground hover:bg-accent hover:text-accent-foreground",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg",
+    success: "bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 shadow-lg",
+    warning: "bg-yellow-600 text-white hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 shadow-lg",
+    gradient: "gradient-primary text-white hover:shadow-lg hover:scale-105 shadow-lg",
   }
 
   const sizes = {

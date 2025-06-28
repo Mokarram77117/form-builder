@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { CheckCircle } from "lucide-react"
 import type { FormData } from "@/lib/types"
+import { useTheme } from "@/components/providers/theme-provider"
 
 interface ThemedFormViewerProps {
   formData: FormData
@@ -27,12 +28,25 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
   const [formValues, setFormValues] = useState<Record<string, any>>({})
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { colorTheme } = useTheme()
 
   const defaultTheme = {
-    primaryColor: "#3B82F6",
-    backgroundColor: "#FFFFFF",
+    primaryColor: getThemeColor(colorTheme),
+    backgroundColor: "transparent",
     fontFamily: "Inter",
     ...theme,
+  }
+
+  function getThemeColor(theme: string) {
+    const colors = {
+      blue: "#3b82f6",
+      green: "#22c55e",
+      purple: "#a855f7",
+      red: "#ef4444",
+      orange: "#f97316",
+      indigo: "#6366f1",
+    }
+    return colors[theme as keyof typeof colors] || colors.blue
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,11 +62,6 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
   }
 
   const renderField = (field: any) => {
-    const fieldStyle = {
-      borderColor: defaultTheme.primaryColor,
-      focusRingColor: defaultTheme.primaryColor,
-    }
-
     switch (field.type) {
       case "text":
       case "email":
@@ -65,11 +74,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
             required={field.required}
             value={formValues[field.id] || ""}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
-            className="border-gray-200 focus:border-current focus:ring-current"
-            style={{
-              "--tw-ring-color": `${defaultTheme.primaryColor}20`,
-              borderColor: formValues[field.id] ? defaultTheme.primaryColor : undefined,
-            }}
+            className="focus:border-primary focus:ring-primary/20"
           />
         )
       case "textarea":
@@ -79,11 +84,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
             required={field.required}
             value={formValues[field.id] || ""}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
-            className="border-gray-200 focus:border-current focus:ring-current"
-            style={{
-              "--tw-ring-color": `${defaultTheme.primaryColor}20`,
-              borderColor: formValues[field.id] ? defaultTheme.primaryColor : undefined,
-            }}
+            className="focus:border-primary focus:ring-primary/20"
             rows={4}
           />
         )
@@ -122,7 +123,6 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
                       }))
                     }
                   }}
-                  style={{ accentColor: defaultTheme.primaryColor }}
                 />
                 <Label htmlFor={`${field.id}-${index}`} className="text-sm font-normal">
                   {option}
@@ -140,11 +140,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
           >
             {(field.options || []).map((option: string, index: number) => (
               <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem
-                  value={option}
-                  id={`${field.id}-${index}`}
-                  style={{ accentColor: defaultTheme.primaryColor }}
-                />
+                <RadioGroupItem value={option} id={`${field.id}-${index}`} />
                 <Label htmlFor={`${field.id}-${index}`} className="text-sm font-normal">
                   {option}
                 </Label>
@@ -159,11 +155,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
             required={field.required}
             value={formValues[field.id] || ""}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
-            className="border-gray-200 focus:border-current focus:ring-current"
-            style={{
-              "--tw-ring-color": `${defaultTheme.primaryColor}20`,
-              borderColor: formValues[field.id] ? defaultTheme.primaryColor : undefined,
-            }}
+            className="focus:border-primary focus:ring-primary/20"
           />
         )
       case "file":
@@ -172,7 +164,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
             type="file"
             required={field.required}
             onChange={(e) => setFormValues((prev) => ({ ...prev, [field.id]: e.target.files?.[0] }))}
-            className="border-gray-200 focus:border-current focus:ring-current"
+            className="focus:border-primary focus:ring-primary/20"
           />
         )
       case "rating":
@@ -183,12 +175,9 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
                 key={star}
                 type="button"
                 className={`text-3xl transition-colors ${
-                  (formValues[field.id] || 0) >= star ? "text-yellow-400" : "text-gray-300"
-                } hover:text-yellow-400`}
+                  (formValues[field.id] || 0) >= star ? "text-primary" : "text-muted-foreground"
+                } hover:text-primary`}
                 onClick={() => setFormValues((prev) => ({ ...prev, [field.id]: star }))}
-                style={{
-                  color: (formValues[field.id] || 0) >= star ? defaultTheme.primaryColor : undefined,
-                }}
               >
                 ★
               </button>
@@ -202,23 +191,14 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
 
   if (isSubmitted) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{
-          backgroundColor: defaultTheme.backgroundColor,
-          fontFamily: defaultTheme.fontFamily,
-        }}
-      >
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md shadow-xl">
           <CardContent className="p-8 text-center">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ backgroundColor: `${defaultTheme.primaryColor}20` }}
-            >
-              <CheckCircle className="w-8 h-8" style={{ color: defaultTheme.primaryColor }} />
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Thank You!</h2>
-            <p className="text-gray-600">Your response has been submitted successfully.</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Thank You!</h2>
+            <p className="text-muted-foreground">Your response has been submitted successfully.</p>
           </CardContent>
         </Card>
       </div>
@@ -226,13 +206,7 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
   }
 
   return (
-    <div
-      className="min-h-screen py-8 px-4"
-      style={{
-        backgroundColor: defaultTheme.backgroundColor,
-        fontFamily: defaultTheme.fontFamily,
-      }}
-    >
+    <div className="min-h-screen py-8 px-4 bg-background">
       <div className="max-w-2xl mx-auto">
         {/* Logo space */}
         {defaultTheme.logo && (
@@ -243,34 +217,23 @@ export function ThemedFormViewer({ formData, theme }: ThemedFormViewerProps) {
 
         <Card className="shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl lg:text-2xl font-bold" style={{ color: defaultTheme.primaryColor }}>
-              {formData.name}
-            </CardTitle>
-            {formData.description && <p className="text-gray-600 mt-2">{formData.description}</p>}
+            <CardTitle className="text-xl lg:text-2xl font-bold text-primary">{formData.name}</CardTitle>
+            {formData.description && <p className="text-muted-foreground mt-2">{formData.description}</p>}
           </CardHeader>
           <CardContent className="p-4 lg:p-8">
             <form onSubmit={handleSubmit} className="space-y-6 lg:space-y-8">
               {formData.fields.map((field, index) => (
                 <div key={field.id} className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-900">
+                  <Label className="text-sm font-medium text-foreground">
                     {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   {renderField(field)}
                 </div>
               ))}
 
               <div className="pt-6">
-                <Button
-                  type="submit"
-                  className="w-full text-white border-0"
-                  disabled={isSubmitting}
-                  size="lg"
-                  style={{
-                    backgroundColor: defaultTheme.primaryColor,
-                    boxShadow: `0 4px 14px 0 ${defaultTheme.primaryColor}40`,
-                  }}
-                >
+                <Button type="submit" className="w-full" disabled={isSubmitting} size="lg" variant="gradient">
                   {isSubmitting ? "Submitting..." : "Submit Form"}
                 </Button>
               </div>

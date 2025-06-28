@@ -23,6 +23,8 @@ import {
   HelpCircle,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { ColorThemeButton } from "@/components/ui/color-theme-selector"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, badge: null },
@@ -49,7 +51,7 @@ export function Sidebar({ children }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
@@ -69,10 +71,10 @@ export function Sidebar({ children }: SidebarProps) {
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header */}
         <div className="lg:hidden">
-          <div className="flex items-center justify-between bg-white px-4 py-3 shadow-sm border-b">
+          <div className="flex items-center justify-between bg-card px-4 py-3 shadow-sm border-b border-border">
             <button
               onClick={() => setMobileOpen(true)}
-              className="rounded-xl p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 transition-colors"
+              className="rounded-xl p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -80,9 +82,12 @@ export function Sidebar({ children }: SidebarProps) {
               <div className="h-8 w-8 rounded-xl gradient-primary flex items-center justify-center shadow-lg">
                 <span className="text-white font-bold text-sm">FP</span>
               </div>
-              <span className="font-bold text-gray-900">FormPilot Pro</span>
+              <span className="font-bold text-foreground">FormPilot Pro</span>
             </div>
-            <div className="w-10" />
+            <div className="flex items-center space-x-2">
+              <ColorThemeButton />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
 
@@ -90,7 +95,7 @@ export function Sidebar({ children }: SidebarProps) {
         <div className="hidden lg:block">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute top-6 z-10 rounded-full bg-white p-2 shadow-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200"
+            className="absolute top-6 z-10 rounded-full bg-card p-2 shadow-lg border border-border hover:bg-accent transition-all duration-200"
             style={{ left: collapsed ? "68px" : "260px", transition: "left 0.3s" }}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -98,7 +103,7 @@ export function Sidebar({ children }: SidebarProps) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-background">{children}</main>
       </div>
     </div>
   )
@@ -114,25 +119,35 @@ function SidebarContent({
   onMobileClose?: () => void
 }) {
   return (
-    <div className="flex flex-1 flex-col bg-white border-r border-gray-200 shadow-xl">
+    <div className="flex flex-1 flex-col bg-card border-r border-border shadow-xl">
       {/* Logo */}
-      <div className={cn("flex items-center px-6 py-6", collapsed ? "justify-center" : "justify-start")}>
-        {onMobileClose && (
-          <button onClick={onMobileClose} className="lg:hidden absolute right-4 top-6 p-2 rounded-xl hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
-        )}
+      <div className={cn("flex items-center px-6 py-6", collapsed ? "justify-center" : "justify-between")}>
         <div className="flex items-center space-x-3">
           <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center shadow-lg">
             <span className="text-white font-bold">FP</span>
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-gray-900 text-lg">FormPilot</span>
-              <span className="text-xs text-purple-600 font-semibold">PRO VERSION</span>
+              <span className="font-bold text-foreground text-lg">FormPilot</span>
+              <span className="text-xs text-primary font-semibold">PRO VERSION</span>
             </div>
           )}
         </div>
+
+        {/* Desktop theme controls */}
+        {!collapsed && !onMobileClose && (
+          <div className="flex items-center space-x-2">
+            <ColorThemeButton />
+            <ThemeToggle />
+          </div>
+        )}
+
+        {/* Mobile close button */}
+        {onMobileClose && (
+          <button onClick={onMobileClose} className="lg:hidden p-2 rounded-xl hover:bg-accent">
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -147,8 +162,8 @@ function SidebarContent({
               className={cn(
                 "group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200",
                 isActive
-                  ? "gradient-primary text-white shadow-lg"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                 collapsed ? "justify-center" : "justify-start",
               )}
             >
@@ -162,8 +177,9 @@ function SidebarContent({
                   <span className="flex-1">{item.name}</span>
                   {item.badge && (
                     <Badge
-                      variant={item.badge === "PRO" ? "gradient" : item.badge === "NEW" ? "success" : "secondary"}
+                      variant={item.badge === "PRO" ? "default" : item.badge === "NEW" ? "default" : "secondary"}
                       size="sm"
+                      className="bg-primary/10 text-primary border-primary/20"
                     >
                       {item.badge}
                     </Badge>
@@ -176,14 +192,14 @@ function SidebarContent({
       </nav>
 
       {/* Bottom navigation */}
-      <div className="px-4 py-4 border-t border-gray-200">
+      <div className="px-4 py-4 border-t border-border">
         {bottomNavigation.map((item) => (
           <Link
             key={item.name}
             href={item.href}
             onClick={onMobileClose}
             className={cn(
-              "group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+              "group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               collapsed ? "justify-center" : "justify-start",
             )}
           >
@@ -199,18 +215,18 @@ function SidebarContent({
 
       {/* Footer */}
       {!collapsed && (
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-6 py-4 border-t border-border bg-muted/50">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-              <span className="text-xs font-semibold text-gray-600">JD</span>
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <span className="text-xs font-semibold text-muted-foreground">JD</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
-              <p className="text-xs text-gray-500 truncate">john@company.com</p>
+              <p className="text-sm font-medium text-foreground truncate">John Doe</p>
+              <p className="text-xs text-muted-foreground truncate">john@company.com</p>
             </div>
           </div>
           <div className="mt-3 text-center">
-            <Badge variant="gradient" size="sm">
+            <Badge variant="default" size="sm" className="bg-primary text-primary-foreground">
               Pro Plan
             </Badge>
           </div>

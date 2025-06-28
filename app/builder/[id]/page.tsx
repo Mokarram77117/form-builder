@@ -199,10 +199,10 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading form builder...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading form builder...</p>
         </div>
       </div>
     )
@@ -210,9 +210,9 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error}</p>
+          <p className="text-destructive mb-4">{error}</p>
           <Link href="/dashboard">
             <Button>Back to Dashboard</Button>
           </Link>
@@ -226,9 +226,9 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header with Form Name Input */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -249,15 +249,15 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 <Input
                   value={currentForm.description}
                   onChange={(e) => dispatch(updateFormDescription(e.target.value))}
-                  className="text-sm text-gray-600 border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
+                  className="text-sm text-muted-foreground border-none p-0 h-auto focus-visible:ring-0 bg-transparent"
                   placeholder="Form Description"
                 />
-                {isDirty && <span className="text-xs text-orange-500">• Unsaved changes</span>}
+                {isDirty && <span className="text-xs text-orange-500 dark:text-orange-400">• Unsaved changes</span>}
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center space-x-1 bg-muted rounded-lg p-1">
                 <Button
                   variant={previewMode === "desktop" ? "default" : "ghost"}
                   size="sm"
@@ -292,16 +292,13 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 onClick={handlePublishForm}
                 size="sm"
                 disabled={isPublishing || !currentForm.fields.length}
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white"
               >
                 <Publish className="w-4 h-4 mr-2" />
                 {isPublishing ? "Publishing..." : "Publish"}
               </Button>
 
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg hover:bg-gray-100 lg:hidden"
-              >
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-accent lg:hidden">
                 {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
             </div>
@@ -329,19 +326,22 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
               <div className="lg:hidden">
                 {/* Mobile Sidebar Overlay */}
                 {sidebarOpen && (
-                  <div className="fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}>
+                  <div
+                    className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+                    onClick={() => setSidebarOpen(false)}
+                  >
                     <div
-                      className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl overflow-hidden flex flex-col"
+                      className="fixed left-0 top-0 h-full w-80 bg-card shadow-xl overflow-hidden flex flex-col"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="p-4 border-b flex-shrink-0">
+                      <div className="p-4 border-b border-border flex-shrink-0">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">Form Fields</h3>
+                          <h3 className="font-semibold text-foreground">Form Fields</h3>
                           <button onClick={() => setSidebarOpen(false)}>
                             <X className="w-5 h-5" />
                           </button>
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">Drag fields to add them to your form</p>
+                        <p className="text-sm text-muted-foreground mt-1">Drag fields to add them to your form</p>
                       </div>
                       <div className="flex-1 overflow-y-auto p-4">
                         <FormFieldPalette />
@@ -420,9 +420,9 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
               <DragOverlay>
                 {draggedField && (
-                  <div className="bg-white p-4 rounded-lg shadow-xl border-2 border-blue-500 opacity-90 transform rotate-3 scale-105 pointer-events-none">
-                    <div className="text-sm font-medium text-gray-900">{draggedField.label}</div>
-                    <div className="text-xs text-gray-500 mt-1">{draggedField.type}</div>
+                  <div className="bg-card p-4 rounded-lg shadow-xl border-2 border-primary opacity-90 transform rotate-3 scale-105 pointer-events-none">
+                    <div className="text-sm font-medium text-foreground">{draggedField.label}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{draggedField.type}</div>
                   </div>
                 )}
               </DragOverlay>
@@ -446,8 +446,8 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium">Allow Multiple Submissions</label>
-                      <p className="text-sm text-gray-600">Users can submit this form multiple times</p>
+                      <label className="text-sm font-medium text-foreground">Allow Multiple Submissions</label>
+                      <p className="text-sm text-muted-foreground">Users can submit this form multiple times</p>
                     </div>
                     <Switch
                       checked={currentForm.settings.allowMultipleSubmissions}
@@ -457,8 +457,8 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium">Require Authentication</label>
-                      <p className="text-sm text-gray-600">Users must be logged in to submit</p>
+                      <label className="text-sm font-medium text-foreground">Require Authentication</label>
+                      <p className="text-sm text-muted-foreground">Users must be logged in to submit</p>
                     </div>
                     <Switch
                       checked={currentForm.settings.requireAuth}
@@ -468,8 +468,8 @@ export default function FormBuilder({ params }: { params: { id: string } }) {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <label className="text-sm font-medium">Show Progress Bar</label>
-                      <p className="text-sm text-gray-600">Display progress indicator for multi-step forms</p>
+                      <label className="text-sm font-medium text-foreground">Show Progress Bar</label>
+                      <p className="text-sm text-muted-foreground">Display progress indicator for multi-step forms</p>
                     </div>
                     <Switch
                       checked={currentForm.settings.showProgressBar}
