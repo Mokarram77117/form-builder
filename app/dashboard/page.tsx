@@ -224,7 +224,7 @@ export default function Dashboard() {
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Link href="/forms/builder/new">
+          <Link href="/forms/create">
             <Button variant="gradient" size="lg">
               <Plus className="w-4 h-4 mr-2" />
               Create Form

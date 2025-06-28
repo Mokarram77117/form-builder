@@ -81,7 +81,7 @@ export default function FormsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Forms</h1>
           <p className="text-gray-600">Create and manage your forms</p>
         </div>
-        <Link href="/forms/builder/new">
+        <Link href="/forms/create">
           <Button className="mt-4 sm:mt-0 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
             <Plus className="w-4 h-4 mr-2" />
             Create Form
@@ -136,7 +136,7 @@ export default function FormsPage() {
               <p className="text-gray-600 mb-4">
                 {searchQuery ? "Try adjusting your search terms" : "Get started by creating your first form"}
               </p>
-              <Link href="/forms/builder/new">
+              <Link href="/forms/create">
                 <Button className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Form
