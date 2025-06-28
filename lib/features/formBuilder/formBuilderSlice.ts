@@ -113,7 +113,7 @@ const formBuilderSlice = createSlice({
         }
       }
     },
-    removeField: (state, action: PayloadAction<string>) => {
+    deleteField: (state, action: PayloadAction<string>) => {
       if (state.currentForm) {
         state.currentForm.fields = state.currentForm.fields.filter((field) => field.id !== action.payload)
         state.isDirty = true
@@ -191,7 +191,7 @@ export const {
   setCurrentForm,
   addField,
   updateField,
-  removeField,
+  deleteField,
   reorderFields,
   setSelectedField,
   updateFormSettings,
