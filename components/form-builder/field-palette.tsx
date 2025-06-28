@@ -2,15 +2,19 @@
 
 import { useDraggable } from "@dnd-kit/core"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Type, Mail, ChevronDown, CheckSquare, Star, Upload } from "lucide-react"
+import { Type, Mail, ChevronDown, CheckSquare, Star, Upload, Hash, Calendar, Phone, ToggleLeft } from "lucide-react"
 
 const fieldTypes = [
   { type: "text", label: "Short Text", icon: Type, description: "Single line text input" },
   { type: "email", label: "Email", icon: Mail, description: "Email address field" },
-  { type: "dropdown", label: "Dropdown", icon: ChevronDown, description: "Select from options" },
+  { type: "select", label: "Dropdown", icon: ChevronDown, description: "Select from options" },
   { type: "checkbox", label: "Checkbox", icon: CheckSquare, description: "Multiple choice selection" },
   { type: "rating", label: "Rating", icon: Star, description: "Star rating field" },
   { type: "file", label: "File Upload", icon: Upload, description: "File attachment field" },
+  { type: "number", label: "Number", icon: Hash, description: "Numeric input field" },
+  { type: "date", label: "Date", icon: Calendar, description: "Date picker field" },
+  { type: "phone", label: "Phone", icon: Phone, description: "Phone number field" },
+  { type: "radio", label: "Radio Buttons", icon: ToggleLeft, description: "Single choice selection" },
 ]
 
 function DraggableField({ type, label, icon: Icon, description }: (typeof fieldTypes)[0]) {
