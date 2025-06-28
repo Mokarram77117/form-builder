@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectItem } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -73,17 +73,13 @@ export default function FormPreview({ params }: { params: { id: string } }) {
           <Select
             value={formValues[field.id] || ""}
             onValueChange={(value) => setFormValues((prev) => ({ ...prev, [field.id]: value }))}
+            placeholder={field.placeholder || "Select an option"}
           >
-            <SelectTrigger className="border-gray-200 focus:border-purple-500 focus:ring-purple-500">
-              <SelectValue placeholder={field.placeholder || "Select an option"} />
-            </SelectTrigger>
-            <SelectContent>
-              {(field.options || []).map((option: string, index: number) => (
-                <SelectItem key={index} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
+            {(field.options || []).map((option: string, index: number) => (
+              <SelectItem key={index} value={option}>
+                {option}
+              </SelectItem>
+            ))}
           </Select>
         )
       case "radio":
